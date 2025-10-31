@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IBM-FE — E-Commerce Product Page</title>
+  <meta name="description" content="Interactive product page demo for IBM-FE project" />
+  <style>
+    /* Basic CSS reset and variables */
+    :root{
+      --bg:#7bf5e5;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#4f46e5; /* indigo-ish */
+      --accent-600:#4338ca;
+      --success:#16a34a;
+      --shadow: 0 6px 18px rgba(15,23,42,0.08);
+      --radius:14px;
+      --max-width:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      padding:28px;
+      display:flex;
+      justify-content:center;
+    }
+    .container{
+      width:100%;
+      max-width:var(--max-width);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:22px;
+    }
+
+    /* Layout for medium+ screens */
+    @media(min-width:980px){
+      .container{
+        grid-template-columns: 1fr 1fr;
+        align-items:start;
+      }
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+    }
+
+    /* Gallery */
+    .gallery{display:flex;flex-direction:column;gap:12px}
+    .main-image{
+      border-radius:12px;
+      overflow:hidden;
+      height:420px;
+      background:linear-gradient(180deg,#f3f4f6,#ffffff);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .main-image img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:cover;
+      display:block;
+      transform:scale(1);
+      transition:transform .35s ease, opacity .35s ease;
+      width:100%;
+      height:100%;
+    }
+    .thumbs{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom:6px;
+    }
+    .thumb{
+      flex:0 0 auto;
+      width:86px;
+      height:66px;
+      border-radius:8px;
+      overflow:hidden;
+      border:2px solid transparent;
+      cursor:pointer;
+      opacity:.95;
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumb[aria-pressed="true"]{border-color:var(--accent); transform:translateY(-3px); box-shadow:0 6px 18px rgba(79,70,229,.12)}
+
+    /* Info column */
+    .info{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .title{font-size:20px;font-weight:700}
+    .meta{font-size:13px;color:var(--muted)}
+    .price-row{display:flex;align-items:center;gap:10px}
+    .price{font-size:20px;font-weight:800}
+    .strike{text-decoration:line-through;color:var(--muted);font-size:14px}
+    .badge{margin-left:auto;background:linear-gradient(180deg,var(--accent),var(--accent-600));color:white;padding:6px 8px;border-radius:8px;font-size:12px}
+
+    /* rating */
+    .rating{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+    .stars{color:#f59e0b;display:inline-block}
+
+    /* variant and quantity */
+    .section-title{font-weight:600;font-size:13px;margin-bottom:6px}
+    .variants{display:flex;gap:8px;flex-wrap:wrap}
+    .variant-btn{
+      border-radius:999px;padding:8px 12px;border:1px solid #e6e7ee;background:white;cursor:pointer;font-size:14px;
+    }
+    .variant-btn[aria-pressed="true"]{background:var(--accent);color:white;border-color:var(--accent)}
+
+    .qty-row{display:flex;align-items:center;gap:8px}
+    .qty-btn{width:38px;height:38px;border-radius:8px;border:1px solid #e6e7ee;background:white;font-weight:700;cursor:pointer}
+    .qty-input{width:64px;padding:8px;border-radius:8px;border:1px solid #e6e7ee;text-align:center}
+
+    /* action buttons */
+    .actions{display:flex;gap:10px;margin-top:6px;align-items:center}
+    .btn{padding:12px 16px;border-radius:10px;cursor:pointer;border:0;font-weight:700}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px rgba(79,70,229,.12)}
+    .btn-ghost{background:transparent;border:1px solid #e6e7ee}
+
+    .small-muted{font-size:13px;color:var(--muted)}
+
+    /* product details below full width */
+    .full{
+      grid-column:1/-1;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+    @media(min-width:980px){
+      .full{grid-template-columns:2fr 1fr}
+    }
+    .specs{font-size:14px;color:#0f172a}
+    .specs .spec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+
+    /* recommended */
+    .recommend-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(min-width:640px){.recommend-grid{grid-template-columns:repeat(4,1fr)}}
+    .rec-card{background:white;border-radius:12px;padding:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .22s ease}
+    .rec-card:hover{transform:translateY(-6px)}
+    .rec-card img{width:100%;height:130px;object-fit:cover;border-radius:8px}
+
+    /* sticky mini cart */
+    .mini-cart{
+      position:fixed;right:20px;bottom:20px;background:var(--accent);color:white;padding:12px 14px;border-radius:999px;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(15,23,42,.18)
+    }
+    .mini-cart.hidden{display:none}
+
+    /* small details */
+    footer{text-align:center;color:var(--muted);font-size:13px;margin-top:20px;padding-bottom:40px}
+
+    /* focus styles for accessibility */
+    .thumb:focus, .variant-btn:focus, .qty-btn:focus, .btn:focus{outline:3px solid rgba(99,102,241,.18);outline-offset:3px}
+
+    /* subtle image fade animation helper */
+    .fade-in{opacity:0;transform:scale(.995)}
+    .fade-in.show{opacity:1;transform:scale(1);transition:opacity .32s ease,transform .32s ease}
+  </style>
+</head>
+<body>
+  <main class="container" id="app">
+    <!-- Left: gallery -->
+    <section class="card gallery" aria-label="Product gallery">
+      <div class="main-image card" id="mainImageContainer" aria-live="polite">
+        <img id="mainImage" src="https://picsum.photos/seed/p1/1200/900" alt="Aurora Wireless Headphones" loading="lazy" />
+      </div>
+
+      <div class="thumbs" role="list" aria-label="Product thumbnails" id="thumbs">
+        <!-- thumbnails injected by JS -->
+      </div>
+    </section>
+
+    <!-- Right: Info -->
+    <aside class="card info" aria-labelledby="productTitle">
+      <div>
+        <div id="productTitle" class="title">Aurora Wireless Headphones</div>
+        <div class="meta">Model: AUR-2025 • SKU: 4521</div>
+      </div>
+
+      <div class="price-row" aria-hidden="false">
+        <div class="price" id="priceINR">₹20,657</div>
+        <div class="strike" id="priceStrike">₹22,952</div>
+        <div class="badge" aria-hidden="true">10% OFF</div>
+      </div>
+
+      <div class="rating" aria-label="4.8 out of 5 stars">
+        <div class="stars" aria-hidden="true">★★★★★</div>
+        <div class="small-muted">(152 reviews)</div>
+        <button class="btn btn-ghost" style="margin-left:auto" id="wishlistBtn" aria-pressed="false" aria-label="Add to wishlist">♡</button>
+      </div>
+
+      <hr>
+
+      <div>
+        <div class="section-title">Color</div>
+        <div class="variants" role="radiogroup" aria-label="Choose color" id="variantGroup">
+          <!-- buttons injected by JS -->
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title" style="margin-top:10px">Quantity</div>
+        <div class="qty-row">
+          <button class="qty-btn" id="decQty" aria-label="Decrease quantity">−</button>
+          <input type="number" id="qtyInput" class="qty-input" value="1" min="1" aria-label="Quantity" />
+          <button class="qty-btn" id="incQty" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="addToCartBtn" aria-label="Add to cart">
+          🛒 Add to cart
+        </button>
+        <button class="btn btn-ghost" id="buyNowBtn">Buy now</button>
+      </div>
+
+      <div class="small-muted" style="margin-top:10px">Free shipping over ₹999 • 30-day returns • 1-year warranty</div>
+    </aside>
+
+    <!-- Full width product details & reviews -->
+    <section class="full">
+      <div class="card specs" id="details">
+        <h3 style="margin:0 0 8px 0;font-size:18px">Product details</h3>
+        <p style="margin:0;color:var(--muted)">
+          Experience studio-quality sound with the Aurora Wireless Headphones. Balanced, rich bass, long battery life,
+          and an ultra-comfortable fit make these perfect for long listening sessions. Active noise cancellation and
+          multipoint Bluetooth make switching between devices effortless.
+        </p>
+
+        <h4 style="margin-top:12px">What's in the box</h4>
+        <ul style="margin-top:6px">
+          <li>Aurora Headphones</li>
+          <li>USB-C charging cable</li>
+          <li>Carrying pouch</li>
+          <li>User manual & warranty card</li>
+        </ul>
+
+        <h4 style="margin-top:12px">Technical specifications</h4>
+        <div class="spec-grid">
+          <div><strong>Battery:</strong> 40 hours</div>
+          <div><strong>Charging:</strong> USB-C, 15 min fast charge = 3 hours</div>
+          <div><strong>Bluetooth:</strong> 5.3, Multipoint</div>
+          <div><strong>Weight:</strong> 245 g</div>
+        </div>
+      </div>
+
+      <aside class="card" aria-labelledby="reviewTitle">
+        <div id="reviewTitle" style="font-weight:700">Customer reviews</div>
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:flex-start">
+          <div style="width:44px;height:44px;border-radius:999px;background:#eef2ff;display:flex;align-items:center;justify-content:center">A</div>
+          <div>
+            <div style="font-weight:600">Aisha</div>
+            <div class="small-muted" style="font-size:12px">1 week ago</div>
+            <div style="margin-top:6px;color:var(--muted)">Great headphones — comfy and the noise cancelling actually works.</div>
+          </div>
+        </div>
+        <a href="#all-reviews" style="display:inline-block;margin-top:12px;color:var(--accent);font-weight:600">Read all reviews</a>
+      </aside>
+    </section>
+
+    <!-- Recommendations -->
+    <section class="card" style="grid-column:1/-1">
+      <h3 style="margin:0 0 12px 0;font-size:18px">People also bought</h3>
+      <div class="recommend-grid" id="recommendGrid" aria-live="polite">
+        <!-- Filled by JS -->
+      </div>
+    </section>
+
+    <footer>© <span id="year"></span> IBM-FE Project — Built with care</footer>
+  </main>
+
+  <!-- Sticky mini cart -->
+  <div id="miniCart" class="mini-cart hidden" role="status" aria-live="polite">
+    <div id="miniCount">0</div>
+    <div>items •</div>
+    <div id="miniTotal">₹0</div>
+  </div>
+
+  <script>
+    (function(){
+      // Data (replace these image URLs with yours)
+      const data = {
+        title: "Aurora Wireless Headphones",
+        sku: "4521",
+        basePriceUSD: 249.99,
+        // images: use any image hosting or relative paths; these use picsum to demo
+        images: [
+          "https://picsum.photos/seed/aurora1/1200/900",
+          "https://picsum.photos/seed/aurora2/1200/900",
+          "https://picsum.photos/seed/aurora3/1200/900",
+          "https://picsum.photos/seed/aurora4/1200/900"
+        ],
+        variants: ["Black", "White", "Blue"],
+        recommendations: [
+          {id:1,title:"Wireless Case",price:99,image:"https://picsum.photos/seed/r1/400/300"},
+          {id:2,title:"USB-C Cable",price:199,image:"https://picsum.photos/seed/r2/400/300"},
+          {id:3,title:"Portable Amp",price:149,image:"https://picsum.photos/seed/r3/400/300"},
+          {id:4,title:"Ear Cushions",price:79,image:"https://picsum.photos/seed/r4/400/300"}
+        ]
+      };
+
+      // Utility: convert USD -> INR approx (static conversion for demo)
+      function usdToInr(usd){
+        // simple conversion; replace with dynamic in production
+        const rate = 83; // 1 USD = ₹83 (approx)
+        return Math.round(usd * rate);
+      }
+
+      // Initialize DOM elements
+      const mainImage = document.getElementById('mainImage');
+      const thumbsContainer = document.getElementById('thumbs');
+      const priceINR = document.getElementById('priceINR');
+      const priceStrike = document.getElementById('priceStrike');
+      const variantGroup = document.getElementById('variantGroup');
+      const qtyInput = document.getElementById('qtyInput');
+      const incQty = document.getElementById('incQty');
+      const decQty = document.getElementById('decQty');
+      const addToCartBtn = document.getElementById('addToCartBtn');
+      const miniCart = document.getElementById('miniCart');
+      const miniCount = document.getElementById('miniCount');
+      const miniTotal = document.getElementById('miniTotal');
+      const recommendGrid = document.getElementById('recommendGrid');
+      const wishlistBtn = document.getElementById('wishlistBtn');
+      const yearSpan = document.getElementById('year');
+
+      yearSpan.textContent = new Date().getFullYear();
+
+      // Render thumbnails
+      let currentIndex = 0;
+      function renderThumbs(){
+        thumbsContainer.innerHTML = '';
+        data.images.forEach((src, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'thumb';
+          btn.setAttribute('role','listitem');
+          btn.setAttribute('aria-pressed', i===0 ? 'true' : 'false');
+          btn.title = 'View image ' + (i+1);
+          btn.innerHTML = '<img src="'+src+'" alt="Thumbnail '+(i+1)+'" loading="lazy" />';
+          btn.addEventListener('click', ()=> setImage(i));
+          btn.addEventListener('keydown', (e)=> {
+            if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); setImage(i); }
+          });
+          thumbsContainer.appendChild(btn);
+        });
+      }
+
+      // set main image with animation
+      function setImage(idx){
+        if(idx === currentIndex) return;
+        const old = mainImage;
+        currentIndex = idx;
+        // fade effect
+        old.classList.add('fade-in');
+        old.classList.remove('show');
+        // update thumbnail aria
+        [...thumbsContainer.children].forEach((b, i)=> b.setAttribute('aria-pressed', i===idx ? 'true' : 'false'));
+        // create temp image to preload then swap (prevents flicker)
+        const t = new Image();
+        t.src = data.images[idx];
+        t.onload = function(){
+          mainImage.style.opacity = '0';
+          setTimeout(()=> {
+            mainImage.src = t.src;
+            mainImage.alt = data.title + ' image ' + (idx+1);
+            mainImage.classList.remove('fade-in');
+            // show animation
+            mainImage.style.opacity = '1';
+          }, 120);
+        };
+      }
+
+      // render price
+      function renderPrice(){
+        const inr = usdToInr(data.basePriceUSD);
+        priceINR.textContent = '₹' + inr.toLocaleString('en-IN');
+        // Strike price = +15%
+        priceStrike.textContent = '₹' + Math.round(inr * 1.15).toLocaleString('en-IN');
+      }
+
+      // render variants
+      let selectedVariant = data.variants[0];
+      function renderVariants(){
+        variantGroup.innerHTML = '';
+        data.variants.forEach((v, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'variant-btn';
+          btn.textContent = v;
+          btn.setAttribute('role','radio');
+          btn.setAttribute('aria-checked', v === selectedVariant ? 'true' : 'false');
+          btn.setAttribute('aria-pressed', v === selectedVariant ? 'true' : 'false');
+          btn.addEventListener('click', ()=> {
+            selectedVariant = v;
+            updateVariantUI();
+          });
+          btn.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectedVariant = v; updateVariantUI(); }
+          });
+          variantGroup.appendChild(btn);
+        });
+      }
+      function updateVariantUI(){
+        [...variantGroup.children].forEach(b => {
+          const is = b.textContent === selectedVariant;
+          b.setAttribute('aria-pressed', is ? 'true' : 'false');
+          b.setAttribute('aria-checked', is ? 'true' : 'false');
+        });
+      }
+
+      // Quantity controls
+      incQty.addEventListener('click', ()=> { qtyInput.value = Math.max(1, Number(qtyInput.value||1) + 1); });
+      decQty.addEventListener('click', ()=> { qtyInput.value = Math.max(1, Number(qtyInput.value||1) - 1); });
+      qtyInput.addEventListener('change', ()=> {
+        if(Number(qtyInput.value) < 1 || isNaN(Number(qtyInput.value))) qtyInput.value = 1;
+      });
+
+      // localStorage cart (simple)
+      const CART_KEY = 'ibm_fe_cart_v1';
+      function getCart(){ try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e){ return []; } }
+      function setCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); }
+      function addToCart(item){
+        const cart = getCart();
+        // merge if same product+variant
+        const existing = cart.find(ci => ci.sku === item.sku && ci.variant === item.variant);
+        if(existing){ existing.qty += item.qty; }
+        else cart.push(item);
+        setCart(cart);
+        updateMiniCart();
+        showAddedToast();
+      }
+
+      // mini cart UI
+      function updateMiniCart(){
+        const cart = getCart();
+        const totalItems = cart.reduce((s,i)=>s+i.qty,0);
+        const totalPrice = cart.reduce((s,i)=> s + i.qty * i.priceINR, 0);
+        if(totalItems > 0){
+          miniCart.classList.remove('hidden');
+          miniCount.textContent = totalItems;
+          miniTotal.textContent = '₹' + totalPrice.toLocaleString('en-IN');
+        } else {
+          miniCart.classList.add('hidden');
+        }
+      }
+
+      // add to cart click
+      addToCartBtn.addEventListener('click', ()=>{
+        const qty = Math.max(1, Number(qtyInput.value||1));
+        const priceINRVal = usdToInr(data.basePriceUSD);
+        const item = {
+          sku: data.sku,
+          title: data.title,
+          variant: selectedVariant,
+          qty: qty,
+          priceINR: priceINRVal
+        };
+        addToCart(item);
+      });
+
+      // buy now -> simple behavior: add then redirect to cart (here we just add and alert)
+      document.getElementById('buyNowBtn').addEventListener('click', ()=>{
+        addToCartBtn.click();
+        // in a real app redirect to /checkout
+        alert('Added to cart — proceed to checkout (demo).');
+      });
+
+      // wish list toggle (for demo only)
+      wishlistBtn.addEventListener('click', ()=>{
+        const pressed = wishlistBtn.getAttribute('aria-pressed') === 'true';
+        wishlistBtn.setAttribute('aria-pressed', String(!pressed));
+        wishlistBtn.textContent = !pressed ? '♥' : '♡';
+      });
+
+      // simple keyboard support for thumbnails navigation
+      thumbsContainer.addEventListener('keydown', (e)=>{
+        if(e.key === 'ArrowRight') { e.preventDefault(); setImage(Math.min(data.images.length-1, currentIndex+1)); }
+        if(e.key === 'ArrowLeft') { e.preventDefault(); setImage(Math.max(0, currentIndex-1)); }
+      });
+
+      // Recommended items
+      function renderRecommendations(){
+        recommendGrid.innerHTML = '';
+        data.recommendations.forEach(r => {
+          const el = document.createElement('div');
+          el.className = 'rec-card';
+          el.innerHTML = `
+            <img src="${r.image}" alt="${r.title}" loading="lazy" />
+            <div style="margin-top:8px;font-weight:600">${r.title}</div>
+            <div style="color:var(--muted);margin-top:6px">₹${usdToInr(r.price).toLocaleString('en-IN')}</div>
+          `;
+          el.addEventListener('click', ()=> {
+            // Quick demo: show product in main view (in real site open product page)
+            alert('Open product page for: ' + r.title);
+          });
+          recommendGrid.appendChild(el);
+        });
+      }
+
+      // small animation for load
+      function showAddedToast(){
+        addToCartBtn.textContent = '✓ Added';
+        addToCartBtn.disabled = true;
+        setTimeout(()=> {
+          addToCartBtn.textContent = '🛒 Add to cart';
+          addToCartBtn.disabled = false;
+        }, 1200);
+      }
+
+      // Initialization
+      function init(){
+        document.title = data.title + ' — IBM-FE';
+        mainImage.src = data.images[0];
+        mainImage.alt = data.title;
+        renderThumbs();
+        renderPrice();
+        renderVariants();
+        renderRecommendations();
+        updateMiniCart();
+      }
+
+      init();
+
+      // Expose some things for debugging in console (optional)
+      window.__IBMFEDemo = { data, usdToInr, getCart, setCart, addToCart };
+    })();
+  </script>
+</body>
+</html>
